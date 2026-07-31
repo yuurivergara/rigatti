@@ -1,0 +1,100 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+@theme {
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --color-paper: #fbfaf7;
+  --color-surface: #ffffff;
+  --color-rule: #e4e1d9;
+  --color-rule-strong: #cfcbc0;
+  --color-ink: #14161c;
+  --color-ink-soft: #5c6270;
+  --color-indigo: #2a3ec4;
+  --color-indigo-soft: #ebedfc;
+  --color-signal: #d8471c;
+  --color-signal-soft: #fdeee9;
+  --color-positive: #12805a;
+
+  --radius-card: 4px;
+}
+
+/*
+  Os tokens são variáveis CSS: o tema escuro troca os valores e as utilities do
+  Tailwind acompanham, sem precisar de `dark:` espalhado pela marcação.
+*/
+[data-theme='dark'] {
+  --color-paper: #101218;
+  --color-surface: #171a22;
+  --color-rule: #272b36;
+  --color-rule-strong: #3a404f;
+  --color-ink: #e9eaf0;
+  --color-ink-soft: #949bab;
+  --color-indigo: #8b98ff;
+  --color-indigo-soft: #1b2036;
+  --color-signal: #ff7d55;
+  --color-signal-soft: #2b1a15;
+  --color-positive: #4cc396;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  [data-theme='dark'] {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-indigo;
+  }
+
+  ::selection {
+    @apply bg-indigo text-surface;
+  }
+}
+
+@layer utilities {
+  /* Números tabulares: preços e quantidades alinham em coluna. */
+  .numeric {
+    @apply font-mono tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  .eyebrow {
+    @apply font-mono text-[11px] uppercase tracking-[0.14em] text-ink-soft;
+  }
+
+  .rule-top {
+    @apply border-t border-rule;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
