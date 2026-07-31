@@ -5,7 +5,7 @@ export const createProductSchema = z.object({
   description: z.string().trim().min(2).max(2000),
   price: z.number().nonnegative(),
   category: z.string().trim().min(2).max(80),
-  imageUrl: z.url().max(2048).nullish(),
+  images: z.array(z.url().max(2048)).max(8, 'Máximo de 8 imagens').default([]),
   stock: z.number().int().nonnegative().default(0),
   active: z.boolean().default(true),
 });

@@ -7,7 +7,12 @@ const productSchema = new Schema(
     description: { type: String, required: true, trim: true, maxlength: 2000 },
     price: { type: Number, required: true, min: 0 },
     category: { type: String, required: true, trim: true, maxlength: 80, index: true },
-    imageUrl: { type: String, trim: true, default: null },
+    // A primeira imagem é a capa usada na listagem.
+    images: {
+      type: [String],
+      default: [],
+      validate: [(value: string[]) => value.length <= 8, 'Máximo de 8 imagens por produto'],
+    },
     stock: { type: Number, required: true, min: 0, default: 0 },
     active: { type: Boolean, required: true, default: true },
   },

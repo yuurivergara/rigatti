@@ -25,7 +25,7 @@ export type Product = {
   description: string;
   price: number;
   category: string;
-  imageUrl: string | null;
+  images: string[];
   stock: number;
   active: boolean;
   createdAt: string;
@@ -36,7 +36,7 @@ export type ProductInput = {
   description: string;
   price: number;
   category: string;
-  imageUrl: string | null;
+  images: string[];
   stock: number;
   active: boolean;
 };

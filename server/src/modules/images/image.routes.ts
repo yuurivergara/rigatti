@@ -32,7 +32,9 @@ imageRouter.post('/', authenticate, requireRole('admin'), upload.single('file'),
 });
 
 imageRouter.get('/:id', async (req, res) => {
-  const image = await Image.findById(String(req.params.id)).lean();
+  // Sem `.lean()`: o documento hidratado entrega um Buffer de verdade, enquanto
+  // o objeto cru traz um bson.Binary que `res.end` não aceita.
+  const image = await Image.findById(String(req.params.id));
   if (!image) throw notFound('Imagem não encontrada');
 
   res.setHeader('Content-Type', image.contentType);

@@ -29,26 +29,23 @@ export function useChatSession() {
       setStreaming(true);
       setEntries((prev) => [...prev, { kind: 'message', role: 'user', content: message }]);
 
-      // Cada rodada de tool call inicia uma nova bolha do assistente.
-      let openBubble = false;
-
       try {
         await chatApi.stream(message, (event) => {
           if (event.type === 'tool') {
-            openBubble = false;
             setEntries((prev) => [...prev, { kind: 'tool', name: event.name }]);
             return;
           }
 
           if (event.type === 'text') {
+            // Deriva tudo de `prev`: um updater que dependesse de flag externa
+            // perderia texto quando o React reexecuta o updater.
             setEntries((prev) => {
-              if (!openBubble) {
-                openBubble = true;
-                return [...prev, { kind: 'message', role: 'assistant', content: event.text }];
-              }
               const last = prev.at(-1);
-              if (last?.kind !== 'message') return prev;
-              return [...prev.slice(0, -1), { ...last, content: last.content + event.text }];
+              const isOpenBubble = last?.kind === 'message' && last.role === 'assistant';
+
+              return isOpenBubble
+                ? [...prev.slice(0, -1), { ...last, content: last.content + event.text }]
+                : [...prev, { kind: 'message', role: 'assistant', content: event.text }];
             });
             return;
           }

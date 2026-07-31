@@ -4,6 +4,8 @@ import type { Product, ProductInput, ProductPage, ProductQuery } from './types';
 export const productsApi = {
   list: (query: ProductQuery) => request<ProductPage>(`/api/products?${toQueryString(query)}`),
 
+  get: (id: string) => request<Product>(`/api/products/${id}`),
+
   categories: () => request<string[]>('/api/products/categories'),
 
   create: (input: ProductInput) =>

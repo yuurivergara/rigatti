@@ -3,6 +3,7 @@ import { useAuth } from './auth/useAuth';
 import { AppShell } from './components/layout/AppShell';
 import { LoginPage } from './pages/LoginPage';
 import { ProductsPage } from './pages/ProductsPage';
+import { ProductDetailPage } from './pages/ProductDetailPage';
 import { ChatPage } from './pages/ChatPage';
 
 export function App() {
@@ -29,6 +30,7 @@ export function App() {
     <AppShell>
       <Routes>
         <Route path="/produtos" element={<ProductsPage />} />
+        <Route path="/produtos/:id" element={<ProductDetailPage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="*" element={<Navigate to="/produtos" replace />} />
       </Routes>

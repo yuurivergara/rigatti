@@ -14,20 +14,24 @@ export function Modal({ title, onClose, children }: Props) {
   }, [onClose]);
 
   return (
+    // Quem rola é o overlay, não o diálogo: com a rolagem interna, focar um
+    // campo em conteúdo que estoura por poucos pixels fazia a caixa pular.
     <div
-      className="fixed inset-0 z-20 grid place-items-center bg-ink/50 p-4 backdrop-blur-[2px]"
+      className="fixed inset-0 z-20 overflow-y-auto bg-ink/50 backdrop-blur-[2px]"
       onClick={onClose}
       role="presentation"
     >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto border border-rule bg-surface p-6"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <h2 className="mb-5 text-lg">{title}</h2>
-        {children}
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={title}
+          className="w-full max-w-lg border border-rule bg-surface p-6"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <h2 className="mb-5 text-lg">{title}</h2>
+          {children}
+        </div>
       </div>
     </div>
   );

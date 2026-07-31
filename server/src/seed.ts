@@ -9,7 +9,9 @@ import { Image } from './modules/images/image.model.js';
 
 const PASSWORD = 'senha1234';
 
-const image = (seed: string) => `https://picsum.photos/seed/${seed}/640/480?grayscale`;
+/** Três ângulos por produto, para exercitar a galeria. */
+const images = (seed: string) =>
+  [1, 2, 3].map((n) => `https://picsum.photos/seed/${seed}-${n}/800/600?grayscale`);
 
 const TENANTS = [
   {
@@ -87,7 +89,7 @@ async function seed() {
           category,
           stock,
           active: true,
-          imageUrl: image(slugify(String(name))),
+          images: images(slugify(String(name))),
         })),
       ),
     );

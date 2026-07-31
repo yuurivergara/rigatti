@@ -6,6 +6,7 @@ import { Button } from '../ui/Button';
 import { Checkbox, Field, TextArea, TextInput } from '../ui/Field';
 import { Alert } from '../ui/Feedback';
 import { Modal } from '../ui/Modal';
+import { ImageManager } from './ImageManager';
 
 type Props = {
   product: Product | null;
@@ -20,7 +21,7 @@ const toFormState = (product: Product | null) => ({
   price: product ? String(product.price) : '',
   category: product?.category ?? '',
   stock: product ? String(product.stock) : '0',
-  imageUrl: product?.imageUrl ?? '',
+  images: product?.images ?? [],
   active: product?.active ?? true,
 });
 
@@ -28,23 +29,9 @@ export function ProductFormModal({ product, categories, onClose, onSaved }: Prop
   const [form, setForm] = useState(toFormState(product));
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
 
   const update = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
-
-  async function uploadImage(file: File) {
-    setUploading(true);
-    setError(null);
-    try {
-      const { url } = await productsApi.uploadImage(file);
-      update('imageUrl', url);
-    } catch (err) {
-      setError(errorMessage(err, 'Não foi possível enviar a imagem'));
-    } finally {
-      setUploading(false);
-    }
-  }
 
   async function save() {
     setSaving(true);
@@ -56,7 +43,7 @@ export function ProductFormModal({ product, categories, onClose, onSaved }: Prop
       price: Number(form.price),
       category: form.category.trim(),
       stock: Number(form.stock),
-      imageUrl: form.imageUrl.trim() || null,
+      images: form.images,
       active: form.active,
     };
 
@@ -138,30 +125,11 @@ export function ProductFormModal({ product, categories, onClose, onSaved }: Prop
           </datalist>
         </Field>
 
-        <Field label="Imagem">
-          <div className="flex items-center gap-2">
-            {form.imageUrl && (
-              <img src={form.imageUrl} alt="" className="size-11 border border-rule object-cover" />
-            )}
-            <TextInput
-              placeholder="https://…"
-              value={form.imageUrl}
-              onChange={(event) => update('imageUrl', event.target.value)}
-            />
-            <label className="cursor-pointer border border-rule px-3 py-2 text-[13px] hover:bg-paper">
-              {uploading ? 'Enviando…' : 'Enviar'}
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (file) void uploadImage(file);
-                }}
-              />
-            </label>
-          </div>
-        </Field>
+        <ImageManager
+          images={form.images}
+          onChange={(images) => update('images', images)}
+          onError={setError}
+        />
 
         <Checkbox
           label="Visível no catálogo"

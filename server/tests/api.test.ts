@@ -110,6 +110,54 @@ describe('API de autenticação e permissões', () => {
     expect(res.body.items[0].companyId).toBeUndefined();
   });
 
+  it('sobe uma imagem e a devolve intacta na URL retornada', async () => {
+    const adminToken = await login(alpha.admin.email, alpha.admin.password);
+    const bytes = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
+
+    const upload = await request(app)
+      .post('/api/images')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .attach('file', bytes, { filename: 'foto.png', contentType: 'image/png' })
+      .expect(201);
+
+    const path = new URL(upload.body.url).pathname;
+    const download = await request(app).get(path).expect(200);
+
+    expect(download.headers['content-type']).toContain('image/png');
+    expect(Buffer.from(download.body)).toEqual(bytes);
+  });
+
+  it('recusa upload de arquivo que não é imagem e de usuário comum', async () => {
+    const adminToken = await login(alpha.admin.email, alpha.admin.password);
+    const userToken = await login(alpha.member.email, alpha.member.password);
+    const bytes = Buffer.from('qualquer coisa');
+
+    await request(app)
+      .post('/api/images')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .attach('file', bytes, { filename: 'malicioso.svg', contentType: 'image/svg+xml' })
+      .expect(400);
+
+    await request(app)
+      .post('/api/images')
+      .set('Authorization', `Bearer ${userToken}`)
+      .attach('file', bytes, { filename: 'foto.png', contentType: 'image/png' })
+      .expect(403);
+  });
+
+  it('aceita várias imagens no produto e preserva a ordem', async () => {
+    const adminToken = await login(alpha.admin.email, alpha.admin.password);
+    const images = ['https://cdn.test/a.png', 'https://cdn.test/b.png', 'https://cdn.test/c.png'];
+
+    const created = await request(app)
+      .post('/api/products')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: 'Com galeria', description: 'Três fotos', price: 10, category: 'Geral', images })
+      .expect(201);
+
+    expect(created.body.images).toEqual(images);
+  });
+
   it('valida o payload e devolve 422 com os campos com erro', async () => {
     const token = await login(alpha.admin.email, alpha.admin.password);
     const res = await request(app)

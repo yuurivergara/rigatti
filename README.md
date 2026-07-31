@@ -258,13 +258,29 @@ genérico. **Erro não previsto nunca vaza detalhe interno** — é a razão de 
 **Escrita e leitura nunca expõem `companyId`.** O `toJSON` do plugin remove o campo e troca `_id`
 por `id`.
 
-#### Upload de imagens
+#### Imagens e galeria
 
-`POST /api/images` recebe via Multer em memória (limite de 2 MB, apenas JPEG/PNG/WebP/AVIF) e grava
-o binário no Mongo; `GET /api/images/:id` serve com `Cache-Control` imutável. Guardar imagem no
-banco não é o que eu faria em produção — é o que evita depender de disco (que serverless não tem)
-ou de uma conta S3/Cloudinary para o avaliador rodar o projeto. O `GET` é **público**: `<img src>`
-não carrega header `Authorization`. Em produção seria S3 + CloudFront com URL assinada.
+Cada produto guarda uma **lista** de imagens (`images: string[]`, máximo de 8); a primeira é a capa
+usada na listagem. O enunciado pede "imagem (URL)" — continua sendo URL, só que o campo virou lista,
+porque catálogo real tem mais de um ângulo por produto.
+
+Há dois caminhos para adicionar, e ambos terminam numa URL:
+
+- **Arquivo do computador** — `POST /api/images` recebe via Multer em memória (2 MB, apenas
+  JPEG/PNG/WebP/AVIF) e grava o binário no Mongo; a rota devolve a URL pública. No formulário isso
+  é o botão "Escolher do computador", que aceita múltiplos arquivos, mais arrastar-e-soltar.
+- **URL externa** — colada direto no campo.
+
+`GET /api/images/:id` serve com `Cache-Control` imutável e é **público**, porque `<img src>` não
+carrega header `Authorization`.
+
+Guardar binário no Mongo não é o que eu faria em produção — é o que evita depender de disco (que
+serverless não tem) ou de uma conta S3/Cloudinary para o avaliador rodar o projeto. Em produção
+seria S3 + CloudFront com URL pré-assinada e derivadas (thumb/WebP).
+
+Na ficha do produto, a galeria tem miniaturas, setas, contador e navegação por seta do teclado.
+
+![Ficha do produto com galeria](docs/produto-galeria.png)
 
 ### 5. Estrutura do frontend
 
@@ -279,9 +295,13 @@ web/src/
 │   ├── auth/       AuthForm
 │   ├── products/   ProductCard, ProductFilters, ProductFormModal, Pagination
 │   └── chat/       ChatTranscript, ChatBubble, ChatComposer, ChatWelcome, ToolTrace
-├── pages/          LoginPage, ProductsPage, ChatPage
+├── pages/          LoginPage, ProductsPage, ProductDetailPage, ChatPage
 └── lib/format.ts
 ```
+
+**Rotas:** `/produtos` (listagem), `/produtos/:id` (ficha) e `/chat`. A ficha é rota própria, e não
+modal, porque produto é recurso endereçável: o link é compartilhável e o botão voltar funciona. Da
+ficha, "Perguntar ao assistente" leva a pergunta pronta para o chat — é o que amarra as duas telas.
 
 **As páginas são finas.** Estado e efeitos moram em hooks (`useProductCatalog` cuida de filtros,
 debounce, paginação e recarga; `useChatSession` cuida do stream e da montagem das bolhas), e a
@@ -323,7 +343,7 @@ respeitado.
 ## Testes
 
 ```bash
-cd server && npm test     # 12 testes, MongoDB em memória
+cd server && npm test     # 15 testes, MongoDB em memória
 ```
 
 Cobrem o que dói se quebrar, não cobertura por cobertura:
@@ -334,7 +354,11 @@ forjado no payload ser ignorado; **a ferramenta do agente respeitar o tenant**.
 
 **`api.test.ts`** — registro cria admin; credencial inválida e request sem token → 401; `user`
 recebe 403 ao criar produto e 200 ao listar; listagem e busca por id isoladas por token; `companyId`
-não aparece na resposta; payload inválido → 422 com os campos.
+não aparece na resposta; payload inválido → 422 com os campos; upload de imagem volta intacto na
+URL retornada; upload de tipo não permitido → 400 e de usuário comum → 403; galeria preserva a ordem.
+
+O teste de upload nasceu de um bug real: com `.lean()`, o Mongoose devolvia o binário como
+`bson.Binary` e o `res.end` quebrava com 500. Só apareceu quando exercitei o caminho de verdade.
 
 ---
 
@@ -351,7 +375,7 @@ Todas as rotas sob `/api` exigem `Authorization: Bearer <token>`, exceto `regist
 | `POST` | `/api/auth/users` | admin |
 | `GET` | `/api/products` | autenticado — `search`, `category`, `minPrice`, `maxPrice`, `page`, `limit` |
 | `GET` | `/api/products/categories` | autenticado |
-| `GET` | `/api/products/:id` | autenticado |
+| `GET` | `/api/products/:id` | autenticado — usado pela ficha do produto |
 | `POST` `PATCH` `DELETE` | `/api/products[/:id]` | **admin** |
 | `POST` | `/api/images` | **admin** — `multipart/form-data`, campo `file` |
 | `GET` | `/api/images/:id` | público |
