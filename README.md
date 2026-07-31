@@ -6,6 +6,15 @@ preço ou estoque, e sem nunca enxergar dados de outra empresa.
 
 Backend em Node + Express + MongoDB (TypeScript), frontend em React + TypeScript.
 
+**Aplicação no ar:** **[rigatti.vercel.app](https://rigatti.vercel.app/login)**
+
+Entre com `admin@rigatti.com` / `senha1234` e depois, numa janela anônima, com
+`admin@technova.com` / `senha1234` — os catálogos são completamente distintos, e o assistente de
+cada empresa só enxerga o seu.
+
+> A API está no plano gratuito do Render, que hiberna após 15 minutos sem tráfego. **A primeira
+> requisição pode levar até um minuto**; as seguintes são normais.
+
 ![Catálogo](docs/catalogo-claro.png)
 
 ---
@@ -13,7 +22,7 @@ Backend em Node + Express + MongoDB (TypeScript), frontend em React + TypeScript
 ## Índice
 
 - [Rodando em 5 minutos](#rodando-em-5-minutos)
-- [Deploy](#deploy)
+- [Como está publicado](#como-está-publicado)
 - [Decisões arquiteturais](#decisões-arquiteturais)
   - [Isolamento multi-tenant](#1-isolamento-multi-tenant-o-filtro-não-é-responsabilidade-de-quem-escreve-a-query)
   - [Autenticação e permissões](#2-autenticação-e-permissões)
@@ -83,16 +92,31 @@ npm run dev               # http://localhost:5173
 
 ---
 
-## Deploy
+## Como está publicado
 
-Passo a passo completo em **[DEPLOY.md](DEPLOY.md)**: Mongo no Atlas, API no Render, frontend na
-Vercel.
+| Camada | Onde | Por quê |
+| --- | --- | --- |
+| Frontend | Vercel — [rigatti.vercel.app](https://rigatti.vercel.app/login) | Build estático do Vite; `vercel.json` faz o rewrite de SPA para `/produtos/:id` não dar 404 |
+| API | Render (processo longo) | Ver abaixo |
+| Banco | MongoDB Atlas M0 | — |
 
-O frontend é estático e vai para a Vercel sem atrito. A API fica num host de processo longo porque
-o `POST /api/chat` mantém um `text/event-stream` aberto por mais de um minuto quando o agente
-encadeia tool calls, e função serverless tem teto de duração por invocação — a resposta seria
-cortada no meio. O DEPLOY.md documenta o caminho todo-na-Vercel também, com o que muda e o que
-continua sendo risco.
+**A API não foi para a Vercel de propósito.** O `POST /api/chat` mantém uma resposta
+`text/event-stream` aberta enquanto o agente pensa, chama ferramentas e escreve — o que passa de um
+minuto quando há duas ou três rodadas de tool calling. Função serverless tem teto de duração por
+invocação, e estourar esse teto corta a conexão no meio: o usuário veria a resposta truncada, sem
+erro claro. Justamente a parte que mais importa aqui. Por isso a API roda num host de processo
+longo, que não impõe esse limite.
+
+Toda a configuração é por variável de ambiente (`MONGO_URI`, `JWT_SECRET`, `ANTHROPIC_API_KEY`,
+`CORS_ORIGIN`, `VITE_API_URL`), então trocar de host é mudar valores, não código.
+
+Duas armadilhas que essa arquitetura tem e que ficaram resolvidas:
+
+- **`VITE_API_URL` é embutida no bundle durante o build.** Alterá-la exige um novo deploy do
+  frontend; salvar no painel não basta.
+- **O build da API precisa das `devDependencies`** (TypeScript e `@types`). Com `NODE_ENV=production`
+  o `npm ci` as ignora e o build morre em `TS2688`. Daí o `--include=dev` no Dockerfile e no comando
+  de build, e o `server/.node-version` fixando o Node em 22 LTS para o build não variar com o tempo.
 
 ---
 
@@ -453,8 +477,8 @@ Segui o critério do enunciado — decisão justificada vale mais que quantidade
 - **React Query / Redux** — duas telas não pagam a dependência.
 - **Testes de frontend** — priorizei os testes de backend, onde mora o risco real (isolamento entre
   empresas e permissões). Um teste de UI quebrado não vaza dado de cliente.
-- **Deploy publicado** — o enunciado dispensa, então não subi. O caminho está documentado passo a
-  passo em [DEPLOY.md](DEPLOY.md) e o projeto está pronto: `Dockerfile` multi-stage,
-  `docker-compose.yml`, `vercel.json` para SPA e API inteiramente configurável por env.
+- **CI/CD e migrations versionadas** — o deploy está no ar, mas o pipeline é o automático do
+  Render/Vercel a cada push. Sem gate de lint/typecheck/testes antes de publicar, que é o que eu
+  colocaria em seguida.
 - **Múltiplas empresas por usuário** — hoje o e-mail é único global e pertence a uma empresa. Com
   self-service real viraria índice composto `{ companyId, email }` e um seletor de workspace.
