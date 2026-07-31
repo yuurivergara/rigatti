@@ -69,11 +69,15 @@ chatRouter.post('/', chatLimiter, async (req, res) => {
   });
   res.flushHeaders();
 
+  // Cliente desconectou: aborta a chamada ao modelo em vez de seguir gerando
+  // tokens que ninguém vai ler.
+  const controller = new AbortController();
+  req.on('close', () => controller.abort());
+
   let answer = '';
 
   try {
-    for await (const event of runAgent(history)) {
-      if (res.writableEnded) break;
+    for await (const event of runAgent(history, controller.signal)) {
       if (event.type === 'done') answer = event.text;
       sse(res, event);
     }
@@ -82,6 +86,7 @@ chatRouter.post('/', chatLimiter, async (req, res) => {
       await Message.create({ userId, role: 'assistant', content: answer });
     }
   } catch (err) {
+    if (controller.signal.aborted) return;
     console.error('[chat]', err);
     sse(res, { type: 'error', message: 'O assistente falhou ao responder. Tente novamente.' });
   } finally {

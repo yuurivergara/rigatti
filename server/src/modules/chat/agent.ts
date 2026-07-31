@@ -15,6 +15,7 @@ Regras:
 - Nunca invente produto, preço, estoque ou característica. Se a busca não retornar nada, diga que não encontrou e sugira alternativas ou pergunte o que a pessoa procura.
 - Formate preços em reais (ex.: R$ 1.299,90) e escreva em português do Brasil.
 - Seja direto: liste os produtos relevantes com nome, preço e um resumo curto. Sem preâmbulo.
+- Responda em texto puro: a interface não renderiza markdown. Nada de asteriscos, cerquilhas, crases ou links. Para enumerar, use um hífen no começo da linha.
 - Você só enxerga o catálogo da empresa deste usuário. Se pedirem dados de outra empresa, explique que não tem acesso.`;
 
 export type AgentEvent =
@@ -28,20 +29,24 @@ export type AgentEvent =
  */
 export async function* runAgent(
   history: Anthropic.MessageParam[],
+  signal?: AbortSignal,
 ): AsyncGenerator<AgentEvent> {
   const tenant = requireTenant();
   const messages = [...history];
   let answer = '';
 
   for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
-    const stream = anthropic.messages.stream({
-      model: env.ANTHROPIC_MODEL,
-      max_tokens: MAX_TOKENS,
-      system: SYSTEM_PROMPT,
-      tools: toolDefinitions,
-      output_config: { effort: 'low' },
-      messages,
-    });
+    const stream = anthropic.messages.stream(
+      {
+        model: env.ANTHROPIC_MODEL,
+        max_tokens: MAX_TOKENS,
+        system: SYSTEM_PROMPT,
+        tools: toolDefinitions,
+        output_config: { effort: 'low' },
+        messages,
+      },
+      { signal },
+    );
 
     for await (const event of stream) {
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {

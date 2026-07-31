@@ -19,7 +19,10 @@ export function ChatTranscript({ entries, streaming, error, onPickSuggestion }: 
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [entries]);
 
-  const waitingForFirstToken = streaming && entries.at(-1)?.kind === 'message';
+  // Mostra o indicador sempre que o agente está trabalhando e ainda não começou
+  // a escrever — inclusive entre uma tool call e o primeiro token.
+  const last = entries.at(-1);
+  const waiting = streaming && !(last?.kind === 'message' && last.role === 'assistant');
 
   return (
     <div
@@ -37,7 +40,7 @@ export function ChatTranscript({ entries, streaming, error, onPickSuggestion }: 
         ),
       )}
 
-      {waitingForFirstToken && <ThinkingIndicator />}
+      {waiting && <ThinkingIndicator />}
       {error && <Alert>{error}</Alert>}
     </div>
   );

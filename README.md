@@ -206,6 +206,11 @@ zero resultados.
 (delta de texto), `tool` (ferramenta em uso) e `done`. O evento `tool` é o que permite a UI mostrar
 *qual consulta o agente fez* — a prova visível de que a resposta veio do banco.
 
+![Chat com o agente](docs/chat.png)
+
+Se o cliente fecha a aba no meio da resposta, um `AbortController` cancela a chamada ao modelo em
+vez de seguir gerando tokens que ninguém vai ler.
+
 Uso `fetch` + `ReadableStream` no cliente em vez de `EventSource` porque `EventSource` não envia
 header `Authorization`.
 
