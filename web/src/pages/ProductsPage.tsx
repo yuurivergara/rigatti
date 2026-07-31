@@ -42,7 +42,7 @@ export function ProductsPage() {
         }
       />
 
-      <div className="flex-1 overflow-y-auto px-5 py-6 md:px-7">
+      <div className="flex-1 overflow-y-auto px-5 py-6 lg:px-7">
         <ProductFilters
           search={filters.search}
           onSearchChange={filters.setSearch}
@@ -73,7 +73,7 @@ export function ProductsPage() {
         )}
 
         {data && data.items.length > 0 && (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] gap-4">
             {data.items.map((product) => (
               <ProductCard
                 key={product.id}

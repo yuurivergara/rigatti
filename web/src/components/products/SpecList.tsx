@@ -5,7 +5,6 @@ export type Spec = {
   value: ReactNode;
 };
 
-/** Ficha técnica: rótulo à esquerda, valor em mono à direita, régua entre linhas. */
 export function SpecList({ specs }: { specs: Spec[] }) {
   return (
     <dl className="border-t border-rule">

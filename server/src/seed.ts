@@ -9,7 +9,6 @@ import { Image } from './modules/images/image.model.js';
 
 const PASSWORD = 'senha1234';
 
-/** Três ângulos por produto, para exercitar a galeria. */
 const images = (seed: string) =>
   [1, 2, 3].map((n) => `https://picsum.photos/seed/${seed}-${n}/800/600?grayscale`);
 

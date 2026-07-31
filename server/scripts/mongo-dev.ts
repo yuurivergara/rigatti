@@ -1,9 +1,5 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
-/**
- * MongoDB descartável para quem quer rodar o projeto sem instalar nada.
- * Os dados vivem só enquanto o processo estiver de pé.
- */
 const server = await MongoMemoryServer.create({
   instance: { port: 27017, dbName: 'catalogo' },
 });

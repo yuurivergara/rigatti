@@ -6,7 +6,6 @@ export const chatApi = {
 
   clear: () => request<void>('/api/chat/history', { method: 'DELETE' }),
 
-  /** Consome o SSE do agente e entrega um evento por vez ao chamador. */
   async stream(
     message: string,
     onEvent: (event: AgentEvent) => void,

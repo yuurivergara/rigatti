@@ -70,9 +70,10 @@ chatRouter.post('/', chatLimiter, async (req, res) => {
   res.flushHeaders();
 
   // Cliente desconectou: aborta a chamada ao modelo em vez de seguir gerando
-  // tokens que ninguém vai ler.
+  // tokens que ninguém vai ler. O sinal é o `close` da resposta, não o do
+  // request, que pode fechar assim que o corpo termina de ser lido.
   const controller = new AbortController();
-  req.on('close', () => controller.abort());
+  res.on('close', () => controller.abort());
 
   let answer = '';
 

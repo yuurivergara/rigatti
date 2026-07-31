@@ -5,10 +5,7 @@ const TOOL_LABELS: Record<string, string> = {
   list_categories: 'listou as categorias',
 };
 
-/**
- * Deixa visível que a resposta veio do banco, não do modelo: cada chamada de
- * ferramenta aparece como uma linha de razão entre as mensagens.
- */
+/** Torna visível que a resposta veio do banco, e não da memória do modelo. */
 export function ToolTrace({ name }: { name: string }) {
   return (
     <p className="flex items-center gap-2 self-start font-mono text-[11px] text-ink-soft">

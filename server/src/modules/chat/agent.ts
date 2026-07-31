@@ -34,9 +34,12 @@ export async function* runAgent(
 ): AsyncGenerator<AgentEvent> {
   const tenant = requireTenant();
   const messages = [...history];
-  let answer = '';
+  // Uma entrada por rodada: o modelo pode escrever antes e depois de usar uma
+  // ferramenta, e emendar os dois trechos produziria frases coladas.
+  const parts: string[] = [];
+  let current = '';
 
-  for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
+  for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
     const stream = anthropic.messages.stream(
       {
         model: env.ANTHROPIC_MODEL,
@@ -51,7 +54,7 @@ export async function* runAgent(
 
     for await (const event of stream) {
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-        answer += event.delta.text;
+        current += event.delta.text;
         yield { type: 'text', text: event.delta.text };
       }
     }
@@ -59,8 +62,11 @@ export async function* runAgent(
     const message = await stream.finalMessage();
     messages.push({ role: 'assistant', content: message.content });
 
+    if (current.trim()) parts.push(current.trim());
+    current = '';
+
     if (message.stop_reason !== 'tool_use') {
-      yield { type: 'done', text: answer };
+      yield { type: 'done', text: parts.join('\n\n') };
       return;
     }
 
@@ -88,6 +94,8 @@ export async function* runAgent(
 
   yield {
     type: 'done',
-    text: answer || 'Não consegui concluir a consulta ao catálogo. Pode reformular a pergunta?',
+    text:
+      parts.join('\n\n') ||
+      'Não consegui concluir a consulta ao catálogo. Pode reformular a pergunta?',
   };
 }

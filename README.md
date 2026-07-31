@@ -13,6 +13,7 @@ Backend em Node + Express + MongoDB (TypeScript), frontend em React + TypeScript
 ## Índice
 
 - [Rodando em 5 minutos](#rodando-em-5-minutos)
+- [Deploy](#deploy)
 - [Decisões arquiteturais](#decisões-arquiteturais)
   - [Isolamento multi-tenant](#1-isolamento-multi-tenant-o-filtro-não-é-responsabilidade-de-quem-escreve-a-query)
   - [Autenticação e permissões](#2-autenticação-e-permissões)
@@ -79,6 +80,19 @@ npm run dev               # http://localhost:5173
 **Docker Compose** (alternativa ao passo 1): crie um `.env` na raiz com `JWT_SECRET` e
 `ANTHROPIC_API_KEY` e rode `docker compose up --build`. O seed continua sendo
 `npm run seed` dentro de `server/`.
+
+---
+
+## Deploy
+
+Passo a passo completo em **[DEPLOY.md](DEPLOY.md)**: Mongo no Atlas, API no Render, frontend na
+Vercel.
+
+O frontend é estático e vai para a Vercel sem atrito. A API fica num host de processo longo porque
+o `POST /api/chat` mantém um `text/event-stream` aberto por mais de um minuto quando o agente
+encadeia tool calls, e função serverless tem teto de duração por invocação — a resposta seria
+cortada no meio. O DEPLOY.md documenta o caminho todo-na-Vercel também, com o que muda e o que
+continua sendo risco.
 
 ---
 
@@ -439,9 +453,8 @@ Segui o critério do enunciado — decisão justificada vale mais que quantidade
 - **React Query / Redux** — duas telas não pagam a dependência.
 - **Testes de frontend** — priorizei os testes de backend, onde mora o risco real (isolamento entre
   empresas e permissões). Um teste de UI quebrado não vaza dado de cliente.
-- **Deploy publicado** — o enunciado dispensa. O projeto está pronto para isso: `Dockerfile`
-  multi-stage, `docker-compose.yml`, `vercel.json` para SPA e API configurável por env. O backend
-  precisa de processo longo (o SSE do chat não sobrevive bem a serverless), então iria para
-  Render/Railway/Fly com o frontend na Vercel e o banco no Atlas.
+- **Deploy publicado** — o enunciado dispensa, então não subi. O caminho está documentado passo a
+  passo em [DEPLOY.md](DEPLOY.md) e o projeto está pronto: `Dockerfile` multi-stage,
+  `docker-compose.yml`, `vercel.json` para SPA e API inteiramente configurável por env.
 - **Múltiplas empresas por usuário** — hoje o e-mail é único global e pertence a uma empresa. Com
   self-service real viraria índice composto `{ companyId, email }` e um seletor de workspace.

@@ -19,15 +19,14 @@ export function ChatTranscript({ entries, streaming, error, onPickSuggestion }: 
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [entries]);
 
-  // Mostra o indicador sempre que o agente está trabalhando e ainda não começou
-  // a escrever — inclusive entre uma tool call e o primeiro token.
+  // Também cobre o intervalo entre uma tool call e o primeiro token.
   const last = entries.at(-1);
   const waiting = streaming && !(last?.kind === 'message' && last.role === 'assistant');
 
   return (
     <div
       ref={scrollRef}
-      className="flex flex-1 flex-col gap-4 overflow-y-auto px-5 py-6 md:px-7"
+      className="flex flex-1 flex-col gap-4 overflow-y-auto px-5 py-6 lg:px-7"
       aria-live="polite"
     >
       {entries.length === 0 && <ChatWelcome onPick={onPickSuggestion} />}

@@ -41,7 +41,7 @@ export function ProductDetailPage() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="border-b border-rule bg-surface px-5 py-4 md:px-7">
+      <div className="border-b border-rule bg-surface px-5 py-4 lg:px-7">
         <Link
           to="/produtos"
           className="font-mono text-[11px] text-ink-soft transition-colors hover:text-indigo"
@@ -50,7 +50,7 @@ export function ProductDetailPage() {
         </Link>
       </div>
 
-      <div className="px-5 py-6 md:px-7">
+      <div className="px-5 py-6 lg:px-7">
         {loading && <EmptyState title="Carregando produto…" />}
 
         {!loading && error && (
@@ -58,7 +58,7 @@ export function ProductDetailPage() {
         )}
 
         {product && (
-          <article className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
+          <article className="mx-auto grid max-w-5xl gap-8 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
             <div className="self-start">
               <ProductGallery images={product.images} alt={product.name} />
             </div>

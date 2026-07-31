@@ -13,7 +13,6 @@ export type AuthResult = {
   company: { id: string; name: string };
 };
 
-/** Registro cria a empresa e o primeiro usuário, que vira admin dela. */
 export async function register(input: RegisterInput): Promise<AuthResult> {
   if (await User.exists({ email: input.email })) {
     throw conflict('E-mail já cadastrado');
@@ -66,7 +65,6 @@ export async function currentSession(userId: string): Promise<Omit<AuthResult, '
   };
 }
 
-/** Criação de usuário dentro da empresa do admin autenticado. */
 export async function invite(companyId: string, input: InviteInput) {
   if (await User.exists({ email: input.email })) {
     throw conflict('E-mail já cadastrado');

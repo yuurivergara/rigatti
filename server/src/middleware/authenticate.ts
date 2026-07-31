@@ -13,10 +13,6 @@ declare global {
   }
 }
 
-/**
- * Valida o JWT e abre o contexto de tenant para toda a cadeia seguinte —
- * é o único ponto do sistema que decide de qual empresa é o request.
- */
 export const authenticate: RequestHandler = (req, _res, next) => {
   const header = req.headers.authorization;
   if (!header?.startsWith('Bearer ')) {
